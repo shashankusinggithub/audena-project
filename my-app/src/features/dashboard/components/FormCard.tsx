@@ -17,7 +17,7 @@ import { zodResolver } from "@hookform/resolvers/zod";
 import { handleTaskCreate } from "@/realtime/eventHandler";
 
 
-export function FormCard() {
+export function FormCard({ onClose }: { onClose?: () => void }) {
   const form = useForm<z.infer<typeof taskCreateSchema>>({
     resolver: zodResolver(taskCreateSchema),
     defaultValues: {
@@ -34,6 +34,7 @@ export function FormCard() {
       const newTask = await createTask(task);
       handleTaskCreate(newTask);
       form.reset();
+      onClose?.();
     } catch (error) {
       console.error("Error creating task:", error);
     }
@@ -41,6 +42,8 @@ export function FormCard() {
 
   return (
     <form className="w-full max-w-sm" onSubmit={form.handleSubmit(onSubmit)}>
+    <h1 className="text-3xl font-bold mb-7">Create Task</h1>
+
       <FieldGroup>
         <Field>
           <FieldLabel htmlFor="form-name">Name</FieldLabel>
@@ -86,10 +89,10 @@ export function FormCard() {
         </Field>
 
         <Field orientation="horizontal">
-          <Button type="button" variant="outline">
+          <Button type="button" variant="outline" onClick={onClose}>
             Cancel
           </Button>
-          <Button type="submit">Submit</Button>
+          <Button type="submit">Create</Button>
         </Field>
       </FieldGroup>
     </form>
