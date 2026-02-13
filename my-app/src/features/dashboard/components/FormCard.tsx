@@ -1,5 +1,5 @@
 import { Button } from "@/components/ui/button";
-import { Field, FieldGroup, FieldLabel } from "@/components/ui/field";
+import { Field, FieldError, FieldGroup, FieldLabel } from "@/components/ui/field";
 import { Input } from "@/components/ui/input";
 import {
   Select,
@@ -8,29 +8,28 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
+import { z } from "zod";
 
 import { createTask } from "@/features/dashboard/api";
-import { type TaskCreate, type WorkflowType } from "@/features/dashboard/types";
+import { taskCreateSchema } from "@/features/dashboard/types";
 import { useForm } from "react-hook-form";
+import { zodResolver } from "@hookform/resolvers/zod";
 import { handleTaskCreate } from "@/realtime/eventHandler";
 
 
 export function FormCard() {
-  const form = useForm<TaskCreate>({
+  const form = useForm<z.infer<typeof taskCreateSchema>>({
+    resolver: zodResolver(taskCreateSchema),
     defaultValues: {
       customer_name: "",
       phone_number: "",
-      workflow: "support" as WorkflowType,
+      workflow: "support",
     },
   });
 
-  const onSubmit = async (data: TaskCreate) => {
+  const onSubmit = async (data: z.infer<typeof taskCreateSchema>) => {
 
-    const task: TaskCreate = {
-      customer_name: data.customer_name,
-      phone_number: data.phone_number,
-      workflow: data.workflow,
-    };
+    const task = data;
     try {
       const newTask = await createTask(task);
       handleTaskCreate(newTask);
@@ -50,8 +49,10 @@ export function FormCard() {
             id="form-name"
             type="text"
             placeholder="Evil Rabbit"
-            required
           />
+          <FieldError>
+            {form.formState.errors.customer_name?.message}
+          </FieldError>
         </Field>
 
         <Field>
@@ -62,12 +63,15 @@ export function FormCard() {
             type="tel"
             placeholder=" 1234567890"
           />
+          <FieldError>
+            {form.formState.errors.phone_number?.message}
+          </FieldError>
         </Field>
         <Field>
           <FieldLabel htmlFor="form-process">Workflow</FieldLabel>
           <Select
             onValueChange={(value) =>
-              form.setValue("workflow", value as WorkflowType)
+              form.setValue("workflow", value as "support" | "sales" | "reminder")
             }
           >
             <SelectTrigger id="form-process">

@@ -2,6 +2,8 @@
 
 A full-stack application for managing automated voice calls with real-time updates.
 
+Added a folder to store references.md and Thought-process diagrams.
+
 ## Tech Stack
 
 - **Backend**: FastAPI (Python 3.12)

@@ -8,45 +8,41 @@ import {
 } from "@/components/ui/table";
 import { TaskStatus, type Task, type TaskCreate } from "../types";
 import { RefreshCcw } from "lucide-react";
-import { Item, ItemMedia } from "@/components/ui/item";
-import { Spinner } from "@/components/ui/spinner";
+import { SpinnerWrapper } from "@/components/spinner-wraper";
 import { TooltipWrapper } from "@/components/tool-tips";
 import { useTasks } from "../hooks";
 import { createTask } from "@/features/dashboard/api";
 import { handleTaskCreate } from "@/realtime/eventHandler";
-
+import { useState } from "react";
+import { PaginationWrapper } from "@/components/pagination";
+import { ArrowDownWideNarrow, ArrowUpWideNarrow } from "lucide-react";
 const headers = [
+  {
+    label: "Created At",
+    key: "created_at",
+    className: "w-1/7",
+  },
   {
     label: "Full Name",
     key: "fullName",
-    className: "",
+    className: "w-2/7",
   },
   {
     label: "Phone Number",
     key: "phone",
+    className: "w-1/7",
   },
   {
     label: "Workflow Type",
-    key: "task",
+    key: "workflow",
+    className: "w-1/7",
   },
   {
     label: "Status",
     key: "status",
-    className: "",
+    className: "w-2/7",
   },
 ];
-
-export function SpinnerDemo() {
-  return (
-    <div className="">
-      <Item>
-        <ItemMedia>
-          <Spinner />
-        </ItemMedia>
-      </Item>
-    </div>
-  );
-}
 
 function StatusCell({ work }: { work: Task }) {
   switch (work.status) {
@@ -58,8 +54,7 @@ function StatusCell({ work }: { work: Task }) {
       return (
         <TableCell className="text-yellow-500 ">
           <div className="flex align-middle items-center">
-          <span className="mr-2">{work.status}</span> <SpinnerDemo />
-
+            <span className="mr-2">{work.status}</span> <SpinnerWrapper />
           </div>
         </TableCell>
       );
@@ -70,9 +65,10 @@ function StatusCell({ work }: { work: Task }) {
         <TableCell className="text-red-500 ">
           {work.status}{" "}
           <RefreshCcw
-            className="inline-block w-4 h-4 ml-6 pointer cursor-pointer"
+            className="inline-block w-4 h-4 ml-4 pointer cursor-pointer mr-10"
             onClick={() => onRetry(work)}
           />
+          {work.error_message}
         </TableCell>
       );
   }
@@ -94,39 +90,90 @@ const onRetry = async (data: Task) => {
 };
 
 export function TaskList() {
-  const { data, isLoading, error } = useTasks();
+  const [page, setPage] = useState(0);
+  const [sort, setSort] = useState({
+    field: "created_at",
+    order: "desc",
+  });
+  const limit = 10;
+
+  const { data, isLoading, error } = useTasks(
+    page,
+    limit,
+    sort.field,
+    sort.order,
+  );
+
+  // Get total from response data, default to 1 if not available
+  const total = data?.total || 0;
+  const totalPages = Math.max(1, Math.ceil(total / limit));
+
   if (isLoading) return <p>Loading tasks...</p>;
   if (error instanceof Error) return <p>Error: {error.message}</p>;
 
-
+  const handlePageChange = (newPage: number) => {
+    setPage(newPage);
+  };
+  console.log(data);
   return (
-    <div className="w-full overflow-auto capitalize">
-      <Table className="w-full">
+    <div className="w-full overflow-x-auto capitalize">
+      <Table className="table-fixed">
         <TableHeader>
-          <TableRow className="w-full text-xl font-bold">
+          <TableRow className=" text-xl font-bold">
             {headers.map((header) => (
-              <TableHead key={header.key} className={header.className}>
+              <TableHead
+                key={header.key}
+                onClick={() =>
+                  setSort({
+                    field: header.key,
+                    order: sort.order === "desc" ? "asc" : "desc",
+                  })
+                }
+                className={`
+                  ${
+                    sort.field === header.key
+                      ? "bg-secondary flex items-center"
+                      : ""
+                  } 
+                    ${header.className}`}
+              >
                 {header.label}
+                {sort.field === header.key ? (
+                  <span className="ml-2 inline-flex items-center">
+                    {sort.order === "desc" ? (
+                      <ArrowDownWideNarrow className="w-7 h-7" />
+                    ) : (
+                      <ArrowUpWideNarrow className="w-7 h-7" />
+                    )}
+                  </span>
+                ) : (
+                  <span className="w-7 h-7 inline-block"></span>
+                )}
               </TableHead>
             ))}
           </TableRow>
         </TableHeader>
         <TableBody className="">
-          {data?.map((work: Task) => (
-            <TableRow key={work.id} className="h-15 w-full items-center">
+          {data?.data?.map((work: Task) => (
+            <TableRow key={work.id} className="h-15 items-center">
+              <TableCell>
+                {new Date(work.created_at).toLocaleString()}
+              </TableCell>
               <TableCell className="w-[10px] pointer cursor-pointer">
                 <TooltipWrapper hoverText={work.customer_name} />
               </TableCell>
               <TableCell>{work.phone_number}</TableCell>
               <TableCell>{work.workflow}</TableCell>
               <StatusCell work={work as Task} />
-              <TableCell className="text-right text-red-500">
-                {work.error_message}
-              </TableCell>
             </TableRow>
           ))}
         </TableBody>
       </Table>
+      <PaginationWrapper
+        page={page}
+        totalPages={totalPages}
+        onPageChange={handlePageChange}
+      />
     </div>
   );
 }

@@ -25,7 +25,7 @@ async def lifespan(app: FastAPI):
     await rabbitmq_service.disconnect()
 
 
-app = FastAPI(lifespan=lifespan, port=8001)
+app = FastAPI(lifespan=lifespan, port=9000)
 app.add_middleware(
     CORSMiddleware,
     allow_origins=settings.cors_origins_list,
