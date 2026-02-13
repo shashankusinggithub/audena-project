@@ -36,8 +36,6 @@ services:
 
   backend:
     build: ./backend
-    ports:
-      - "8000:8000"
     environment:
       - DATABASE_URL=sqlite:///./audena.db
       - RABBITMQ_URL=amqp://guest:guest@rabbitmq:5672/
@@ -62,8 +60,6 @@ services:
       args:
         VITE_API_URL: https://audena.shashawk.com/api
         VITE_WS_URL: wss://audena.shashawk.com/api/ws
-    ports:
-      - "3000:3000"
     depends_on:
       - backend
 
@@ -71,7 +67,6 @@ services:
     image: nginx:alpine
     ports:
       - "80:80"
-      - "443:443"
     volumes:
       - ./nginx/conf.d:/etc/nginx/conf.d
       - ./certs:/etc/nginx/certs

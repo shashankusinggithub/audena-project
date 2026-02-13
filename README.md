@@ -4,6 +4,13 @@ A full-stack application for managing automated voice calls with real-time updat
 
 Added a folder to store references.md and Thought-process diagrams.
 
+## Quick Demo
+
+[Live Demo](https://audena.shashawk.com/)
+
+Deployed in Raspberry pi 3 b with 1GB RAM
+
+
 ## Tech Stack
 
 - **Backend**: FastAPI (Python 3.12)
@@ -15,14 +22,20 @@ Added a folder to store references.md and Thought-process diagrams.
 
 ## Quick Start
 
+clone the repository
+```bash
+git clone https://github.com/shashankusinggithub/audena-project.git
+```
+
+
 ```bash
 # Using Docker (Recommended)
 docker-compose up --build
 
+# IF the front end fails install 
+
 # Access:
-# Frontend: http://localhost:5173
-# API Docs: http://localhost:8000/docs
-# RabbitMQ: http://localhost:15672 (guest/guest)
+# Frontend: http://localhost
 ```
 
 ## Local Development
@@ -88,3 +101,21 @@ React Frontend ← WebSocket → FastAPI Backend ← → RabbitMQ ← → Twilio
                           SQLite Database                            Webhook
 ```
 
+
+
+FLow
+
+Backend server on startup, 
+     it will create a SQLite database if it doesn't exist
+     It will subscribe to webhooks from Twilio (This should be only one time process in real life but for simplicity, we are doing it on startup)
+     It will start a WebSocket server to give real time update to frontend about the status as soon as it gets a webhook event from Twilio
+
+Twilio will send a webhook event to the backend server when a call is initiated, answered, or completed.
+     2 in 10 tasks will fail randomly to simulate real world scenario
+     Backend server will publish a message to RabbitMQ for each event
+     Twilio will consume the message and process it
+
+Nginx will reverse proxy the requests to the backend server
+
+Though process in [1st iteration](./Thought-Process/Iteration1.png)
+Though process in [2nd iteration](./Thought-Process/Iteration2.drawio.png)
