@@ -1,0 +1,70 @@
+version: '3.8'
+
+services:
+  rabbitmq:
+    image: rabbitmq:4-management
+    ports:
+      - "5672:5672"
+      - "15672:15672"
+    healthcheck:
+      test: rabbitmq-diagnostics -q ping
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+  twilio-simulator:
+    build: ./twilio-simulator
+    environment:
+      - DATABASE_URL=sqlite:///./twilio.db
+      - RABBITMQ_URL=amqp://guest:guest@rabbitmq:5672/
+      - RABBITMQ_EXCHANGE_NAME=work_topic_exchange
+      - QUEUE_CALL_REQUESTS=work_call_requests
+    ports:
+      - "9000:9000"
+    depends_on:
+      rabbitmq:
+        condition: service_healthy
+    volumes:
+      - ./twilio-simulator:/app
+    command: uvicorn app.main:app --host 0.0.0.0 --port 9000
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:9000/health"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+      start_period: 10s
+
+  backend:
+    build: ./backend
+    ports:
+      - "8000:8000"
+    environment:
+      - DATABASE_URL=sqlite:///./audena.db
+      - RABBITMQ_URL=amqp://guest:guest@rabbitmq:5672/
+      - TWILIO_SIMULATOR_URL=http://twilio-simulator:9000
+      - CALLBACK_URL=http://backend:8000/api/webhooks
+      - RABBITMQ_EXCHANGE_NAME=work_topic_exchange
+      - QUEUE_CALL_REQUESTS=work_call_requests
+      - UNIQUE_WORKER_ID=publisher
+    depends_on:
+      rabbitmq:
+        condition: service_healthy
+      twilio-simulator:
+        condition: service_started  
+    volumes:
+      - ./backend:/app
+    command: uvicorn app.main:app --host 0.0.0.0 --port 8000
+
+
+  frontend:
+    build:
+      context: ./my-app
+    ports:
+      - "3000:3000"
+    environment:
+      - VITE_API_URL=http://backend:8000/api
+      - VITE_WS_URL=ws://backend:8000/api/ws
+    depends_on:
+      - backend
+    restart: unless-stopped
+
