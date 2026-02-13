@@ -59,12 +59,22 @@ services:
   frontend:
     build:
       context: ./my-app
+      args:
+        VITE_API_URL: https://audena.shashawk.com/api
+        VITE_WS_URL: wss://audena.shashawk.com/api/ws
     ports:
       - "3000:3000"
-    environment:
-      - VITE_API_URL=http://backend:8000/api
-      - VITE_WS_URL=ws://backend:8000/api/ws
     depends_on:
       - backend
-    restart: unless-stopped
 
+  nginx:
+    image: nginx:alpine
+    ports:
+      - "80:80"
+      - "443:443"
+    volumes:
+      - ./nginx/conf.d:/etc/nginx/conf.d
+      - ./certs:/etc/nginx/certs
+    depends_on:
+      - frontend
+      - backend
