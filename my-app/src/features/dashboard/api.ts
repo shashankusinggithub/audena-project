@@ -9,7 +9,7 @@ export const fetchTasks = async (page: number = 0, limit: number = 10, sortBy: s
     sort_order: sortOrder,
   });
   const data = await axios
-    .get(`${import.meta.env.VITE_API_URL}/works/?${params}`)
+    .get(`${import.meta.env.VITE_API_URL}/works?${params}`)
     .then((response) => response.data)
     .catch((error) => {
       console.error("Error fetching tasks:", error);
@@ -20,7 +20,7 @@ export const fetchTasks = async (page: number = 0, limit: number = 10, sortBy: s
 
 export const createTask = async (task: TaskCreate): Promise<Task> => {
   const data = await axios
-    .post(`${import.meta.env.VITE_API_URL}/works/`, task)
+    .post(`${import.meta.env.VITE_API_URL}/works`, task)
     .then((response) => response.data)
     .catch((error) => {
       console.error("Error creating task:", error);
