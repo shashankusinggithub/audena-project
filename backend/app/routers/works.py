@@ -1,22 +1,13 @@
-from fastapi import APIRouter, HTTPException, status, Query
-from fastapi.responses import JSONResponse
+from fastapi import APIRouter, HTTPException, status
 from sqlmodel import select, func
-from pydantic import BaseModel
 from app.dependencies import SessionDep
-from app.models.work import Work, WorkBase, WorkStatus
+from app.models.work import Work, WorkBase, WorkStatus, WorksResponse
 from app.dependencies import RabbitMQDep
 import logging
 
 logger = logging.getLogger(__name__)
 
 router = APIRouter(prefix="/works", tags=["works"])
-
-
-# Response model for paginated works
-class WorksResponse(BaseModel):
-    data: list[Work]
-    total: int
-    config: dict
 
 
 @router.post("", response_model=Work, status_code=status.HTTP_201_CREATED)

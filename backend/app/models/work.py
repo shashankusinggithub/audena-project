@@ -38,3 +38,8 @@ class WebhookCallStatus(SQLModel):
     work_id: int
     status: WorkStatus
     error_message: Optional[str] = None
+
+class WorksResponse(SQLModel):
+    data: list[Work]
+    total: int
+    config: dict
