@@ -32,7 +32,6 @@ git clone https://github.com/shashankusinggithub/audena-project.git
 # Using Docker (Recommended)
 docker-compose up --build
 
-# IF the front end fails install 
 
 # Access:
 # Frontend: http://localhost
@@ -60,7 +59,7 @@ npm run dev
 
 ### Twilio Simulator
 ```bash
-cd backend
+cd twilio-simulator
 python -m venv venv
 source venv/bin/activate
 pip install -r requirements.txt
